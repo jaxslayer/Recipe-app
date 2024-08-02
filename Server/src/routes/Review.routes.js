@@ -13,7 +13,7 @@ const router = Router();
 router.route("/createmeal").post(Auth, WriteReviewForMeal);
 router.route("/createrecipe").post(Auth, WriteReviewForRecipe);
 router.route("/get").get(Auth, GetReview);
-router.route("/total").get(Auth, TotalLikes);
+router.route("/total").get(TotalLikes);
 router.route("/update").patch(Auth, UpdateReview);
 
 export default router;

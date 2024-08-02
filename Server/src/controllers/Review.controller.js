@@ -2,6 +2,7 @@ import { Review } from "../models/Review.models.js";
 import { asyncHandler } from "../utils/AsyncHandler.js";
 import { Apierror } from "../utils/ApiError.js";
 import { Apiresponse } from "../utils/ApiResponse.js";
+import mongoose from "mongoose";
 
 const WriteReviewForMeal = asyncHandler(async (req, res) => {
   const { id, Title, Description, Likes } = req.body;
@@ -83,20 +84,15 @@ const UpdateReview = asyncHandler(async (req, res) => {
 
 const TotalLikes = asyncHandler(async (req, res) => {
   const { id } = req.body;
-  const review = await Review.find({
-    $or: [{ Meal: id }, { Recipe: id }],
-  }).select("Likes");
-  if (!review) {
+  const avg = await Review.aggregate([
+    { $match: { Recipe: new mongoose.Types.ObjectId(id) } },
+    { $group: { _id: "$Recipe", averageRating: { $avg: "$Likes" } } },
+  ]);
+  if (!avg) {
     res.status(200).json(new Apierror(200, [{ Likes: 1 }], "only one star"));
   }
-  let totallikes = 0;
-  let count = 0;
-  review.forEach((field, index) => {
-    totallikes += field.Likes;
-    count = index + 1;
-  });
   res.json(
-    new Apiresponse(200, [Math.round(totallikes / count)], "Toral likes")
+    new Apiresponse(200, [Math.round(avg[0].averageRating)], "Toral likes")
   );
 });
 
